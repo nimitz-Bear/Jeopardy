@@ -249,7 +249,7 @@ public class GameOptions extends DataSuperClass {
 		newGameBtn.setBackground(Color.ORANGE);
 		newGameBtn.setOpaque(true);
 		newGameBtn.setBorderPainted(false);
-		newGameBtn.setBounds(461, 385, 117, 29);
+		newGameBtn.setBounds(683, 385, 117, 29);
 		newGameBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (optionsAreValid() == true) {
@@ -282,6 +282,7 @@ public class GameOptions extends DataSuperClass {
 					// make a random team the first team
 //					int randomTeam = (int) ((Math.random() * ((6 - 1) + 1)) + 1);
 
+					System.out.println(teamCount);
 					JeopardyGame frame = new JeopardyGame(teamCount, null);
 					frame.setVisible(true);
 					dispose();
@@ -362,6 +363,7 @@ public class GameOptions extends DataSuperClass {
 		JTextArea questionDisplay = new JTextArea("Question");
 		questionDisplay.setToolTipText("question");
 		questionDisplay.setLineWrap(true);
+		questionDisplay.setWrapStyleWord(true);
 		questionDisplay.setEditable(false);
 		questionScrollPane.setViewportView(questionDisplay);
 
@@ -372,6 +374,7 @@ public class GameOptions extends DataSuperClass {
 		JTextArea answerDisplay = new JTextArea("Answer");
 		answerDisplay.setToolTipText("answer");
 		answerDisplay.setLineWrap(true);
+		answerDisplay.setWrapStyleWord(true);
 		answerDisplay.setEditable(false);
 		answerScrollPane.setViewportView(answerDisplay);
 
@@ -384,16 +387,16 @@ public class GameOptions extends DataSuperClass {
 		description.setBounds(181, 420, 685, 40);
 		contentPane.add(description);
 
-		JButton randomizeQuestionsBtn = new JButton("Random Questions");
-		randomizeQuestionsBtn.setBackground(Color.ORANGE);
-		randomizeQuestionsBtn.setOpaque(true);
-		randomizeQuestionsBtn.setBorderPainted(false);
-		randomizeQuestionsBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-			}
-		});
-		randomizeQuestionsBtn.setBounds(625, 385, 177, 29);
-		contentPane.add(randomizeQuestionsBtn);
+//		JButton randomizeQuestionsBtn = new JButton("Random Questions");
+//		randomizeQuestionsBtn.setBackground(Color.ORANGE);
+//		randomizeQuestionsBtn.setOpaque(true);
+//		randomizeQuestionsBtn.setBorderPainted(false);
+//		randomizeQuestionsBtn.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent arg0) {
+//			}
+//		});
+//		randomizeQuestionsBtn.setBounds(625, 385, 177, 29);
+//		contentPane.add(randomizeQuestionsBtn);
 	}
 
 	private void displayTimer(JTextArea answerDisplay, JTextArea questionDisplay, JLabel imageLabel) {

@@ -11,7 +11,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.imageio.ImageIO;
-//import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -20,20 +19,19 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import java.awt.Font;
-//import java.awt.Image;
 
 import javax.swing.SwingConstants;
-import javax.swing.Timer;
+//import javax.swing.Timer;
+import java.util.Timer;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-//import java.awt.image.BufferedImage;
 import java.io.File;
-//import java.io.IOException;
 import java.util.LinkedList;
+import java.util.TimerTask;
 import java.awt.event.ActionEvent;
 
 public class QuestionEdit extends DataSuperClass {
@@ -45,20 +43,25 @@ public class QuestionEdit extends DataSuperClass {
 	JLabel imageLabel;
 	int width, height;
 
-	// GUI components for showing whoel image
+	// GUI components for showing image using JDialog
 	JDialog displayImage;
 	JLabel jdialogImgLabel;
 
+	// variables for manipulating table data
 	DefaultTableModel searchDTM = new DefaultTableModel();
 	LinkedList<Integer> searchResults = new LinkedList<Integer>();
 	LinkedList<String> categoriesList = new LinkedList<String>();
 
+	// variables for the timers to update
 	int lastSelectedRow = -1;
-	private static int milliseconds = 0, seconds = 0;
+//	private static int milliseconds = 0, seconds = 0;
 	Timer updateTimer;
 	Timer autosaveTimer;
+	Timer validationTimer;
 //	boolean userEditing = false;
 	boolean autoSave = true;
+//	int currenttime = 31;
+//	int timesDataValidationIsFalse = 0;
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -103,7 +106,10 @@ public class QuestionEdit extends DataSuperClass {
 		JButton backBtn = new JButton("Main Menu");
 		backBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				updateTimer.stop();
+//				updateTimer.stop();
+				if (autoSave == true) {
+					autosaveTimer.cancel();
+				}
 				MainMenu frame = new MainMenu();
 				frame.setVisible(true);
 				dispose();
@@ -324,7 +330,13 @@ public class QuestionEdit extends DataSuperClass {
 				AddQuestion frame = new AddQuestion();
 				frame.setVisible(true);
 				dispose();
-				updateTimer.stop(); // otherwise timer would keep running in AddQuestion
+
+				// ensures that autoSaveTimer is running when closing
+				if (autoSave == true) {
+					autosaveTimer.cancel();
+				}
+
+//				updateTimer.stop(); // otherwise timer would keep running in AddQuestion
 				// TODO test if the sql adding actually works
 			}
 		});
@@ -368,6 +380,7 @@ public class QuestionEdit extends DataSuperClass {
 
 		JTextArea questionDisplay = new JTextArea("Question");
 		questionDisplay.setLineWrap(true);
+		questionDisplay.setWrapStyleWord(true);
 		questionScrollPane.setViewportView(questionDisplay);
 
 		JScrollPane answerScrollPane = new JScrollPane();
@@ -376,12 +389,16 @@ public class QuestionEdit extends DataSuperClass {
 
 		JTextArea answerDisplay = new JTextArea("Answer");
 		answerDisplay.setLineWrap(true);
+		questionDisplay.setWrapStyleWord(true);
 		answerScrollPane.setViewportView(answerDisplay);
 
 		JButton saveButton = new JButton("Save");
 		saveButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				tempWriteData();
+				if (tableDataValid() == true) {
+					System.out.println("saved using save button.");
+					tempWriteData();  
+				}
 			}
 		});
 		saveButton.setBounds(762, 432, 117, 29);
@@ -390,20 +407,20 @@ public class QuestionEdit extends DataSuperClass {
 		JButton autosaveToggle = new JButton("Autosave Off");
 		autosaveToggle.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				// auto-save is active when the program initializes
 				System.out.println("button pressed state: " + autoSave);
 				// TODO toggle auto-save
 				if (autoSave == false) {
-					//This is Dad
 					// start the timer
-					autoSave();
-					autosaveTimer.restart();
-//					autosaveTimer.start();
-					autosaveToggle.setText("Autosave Off");			
+
+					startAutosave();
+					autosaveToggle.setText("Autosave Off");
 					autoSave = true;
+
 					System.out.println("restart autosave Timer");
 				} else {
 					// stop the timer
-					autosaveTimer.stop();
+					autosaveTimer.cancel();
 					autosaveToggle.setText("Autosave On");
 					autoSave = false;
 					System.out.println("stop autosave timer");
@@ -413,27 +430,43 @@ public class QuestionEdit extends DataSuperClass {
 		autosaveToggle.setBounds(7, 261, 141, 29);
 		contentPane.add(autosaveToggle);
 
-		updateTimer(answerDisplay, questionDisplay);
-		autoSave();
-		autosaveTimer.start();
+		// bunch of timers to update GUI, run validation, and Auto-save
+		updateTimer = new Timer();
+		TimerTask updateGUI = new TimerTask() {
+			public void run() {
+				lastSelectedRow = updateDisplay(answerDisplay, questionDisplay, imageLabel, table, lastSelectedRow,
+						searchInput);
+			}
+		};
+		updateTimer.scheduleAtFixedRate(updateGUI, 0, 500);
+
+		validationTimer = new Timer();
+		TimerTask validation = new TimerTask() {
+			public void run() {
+				// makes sure that the user isnt editing when validating
+				if (autoSave == false) {
+					System.out.println("Data is valid: " + tableDataValid());
+				}
+			}
+		};
+		validationTimer.scheduleAtFixedRate(validation, 0, 15000);
+
+		startAutosave();
 	}
 
-//	private void updateDatabase() {
-//		if (table.getSelectedRow() >= 0 && table.getSelectedColumn() >= 0 && table.isEditing() == false
-//				&& userEditing == true) {
-//			userEditing = false;
-//			updateSQL(table.getSelectedRow(), table.getSelectedColumn(), searchInput, searchResults, questionDTM);
-//		}
-//
-//		if (table.getSelectedRow() >= 0 && table.getSelectedColumn() >= 0 && table.isEditing()) {
-////			System.out.println("Row" + table.getSelectedRow());
-////			System.out.println("Column" + table.getSelectedColumn());
-////			updateSQL(table.getSelectedRow(), table.getSelectedColumn(), searchInput, searchResults, questionDTM);
-//			// TODO adding an ID system
-//			userEditing = true;
-////			System.out.println("User is editing");
-//		}
-//	}
+	/*
+	 * private void updateDatabase() { if (table.getSelectedRow() >= 0 &&
+	 * table.getSelectedColumn() >= 0 && table.isEditing() == false && userEditing
+	 * == true) { userEditing = false; updateSQL(table.getSelectedRow(),
+	 * table.getSelectedColumn(), searchInput, searchResults, questionDTM); }
+	 * 
+	 * if (table.getSelectedRow() >= 0 && table.getSelectedColumn() >= 0 &&
+	 * table.isEditing()) { // System.out.println("Row" + table.getSelectedRow());
+	 * // System.out.println("Column" + table.getSelectedColumn()); //
+	 * updateSQL(table.getSelectedRow(), table.getSelectedColumn(), searchInput,
+	 * searchResults, questionDTM); // TODO adding an ID system userEditing = true;
+	 * // System.out.println("User is editing"); } }
+	 */
 
 	// updates the text in the image preview
 
@@ -444,20 +477,20 @@ public class QuestionEdit extends DataSuperClass {
 		// delete from the categories list, if there are no more questions
 	}
 
-	private boolean tableEditingValidation() {
+	private boolean tableDataValid() {
 		// can't be more than 5 questions a category
 		for (int i = 0; i < categoriesList.size(); i++) {
 
-			int questionIntCategory = 0;
+			int questionsInCategory = 0;
 
 			for (int row = 0; row < questionDTM.getRowCount(); row++) {
 				String categoryFromTable = questionDTM.getValueAt(row, 4).toString();
 				if (categoryFromTable.contentEquals(categoriesList.get(i))) {
-					questionIntCategory++;
+					questionsInCategory++;
 				}
 			}
 
-			if (questionIntCategory > 5) {
+			if (questionsInCategory > 5) {
 				JOptionPane.showMessageDialog(null,
 						"Don't include more than 5 questions for the " + categoriesList.get(i) + " category.");
 				return false;
@@ -468,10 +501,13 @@ public class QuestionEdit extends DataSuperClass {
 		int row = 0;
 		try {
 			for (row = 0; row < questionDTM.getRowCount(); row++) {
-				int intToCheck = (int) questionDTM.getValueAt(row, 2);
-				if ((intToCheck > 0 && intToCheck <= 5) == false) {
+//				System.out.println( questionDTM.getValueAt(row, 2));
+				int intToCheck = Integer.valueOf(questionDTM.getValueAt(row, 2).toString());
+//				System.out.println(intToCheck < 0 && intToCheck > 5);
+				if (intToCheck < 0 || intToCheck > 5) {
 					table.setRowSelectionInterval(row, row);
-					JOptionPane.showMessageDialog(null, "");
+
+					JOptionPane.showMessageDialog(null, "Please have a number between 1 and 5 for difficulty");
 					return false;
 				}
 
@@ -488,55 +524,66 @@ public class QuestionEdit extends DataSuperClass {
 		return true;
 	}
 
-	private void autoSave() {
-		// this listener updates the display for question and answer
-		ActionListener timerListener = new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				++milliseconds;
-				if (milliseconds == 1000) {
-					seconds++;
-					milliseconds = 0;
-				}
+	// automatically saves questions
+	private void startAutosave() {
+		autosaveTimer = new Timer();
+		TimerTask autoSave = new TimerTask() {
+			public void run() {
 
-				if (seconds == 10) {
+				// makes sure data is valid, before saving
+				if (tableDataValid() == true) {
+					System.out.println("autoSave");
 					tempWriteData();
-					seconds = 0;
 				}
 			}
 		};
+		autosaveTimer.scheduleAtFixedRate(autoSave, 0, 15000);
 
-		autosaveTimer = new Timer(1, timerListener);
+		/*
+		 * ActionListener timerListener = new ActionListener() { public void
+		 * actionPerformed(ActionEvent evt) { ++milliseconds; if (milliseconds == 1000)
+		 * { seconds++; milliseconds = 0; }
+		 * 
+		 * if (seconds == 30 && tableDataValid() == true) { // if (autosaveState ==
+		 * true) {
+		 * 
+		 * tempWriteData(); // } seconds = 0; } } };
+		 */
+
+//		autosaveTimer = new Timer(1, timerListener);
 //		autosaveTimer.start();
+
 	}
 
-	private void updateTimer(JTextArea answerDisplay, JTextArea questionDisplay) {
-		// this listener updates the display for question and answer
-		ActionListener timerListener = new ActionListener() {
-			public void actionPerformed(ActionEvent evt) {
-				++milliseconds;
-				if (milliseconds == 1000) {
-					seconds++;
-					milliseconds = 0;
-				}
-//				if (milliseconds % 50 == 0) {
-//					updateDatabase();
-//				}
-
-				if (milliseconds % 500 == 0) {
-					lastSelectedRow = updateDisplay(answerDisplay, questionDisplay, imageLabel, table, lastSelectedRow,
-							searchInput);
-//					updateImageText();
-				}
-
-//				if (seconds == 10) {
-//					tempWriteData();
+//	private void updateTimer(JTextArea answerDisplay, JTextArea questionDisplay) {
+//		// this listener updates the display for question and answer
+////		ActionListener timerListener = new ActionListener() {
+////			public void actionPerformed(ActionEvent evt) {
+////				++milliseconds;
+////				if (milliseconds == 1000) {
+////					seconds++;
+////					milliseconds = 0;
+////				}
+////				if (milliseconds % 50 == 0) {
+////					updateDatabase();
+////				}
+//
+////				if (milliseconds % 500 == 0) {
+//					lastSelectedRow = updateDisplay(answerDisplay, questionDisplay, imageLabel, table, lastSelectedRow,
+//							searchInput);
+////					tableDataValid();
+////					updateImageText();
+////				}
+//				
+//				if(seconds == 10) {
+//					tableDataValid();
 //					seconds = 0;
 //				}
-			}
-		};
-
-		updateTimer = new Timer(1, timerListener);
-		updateTimer.start();
-	}
+////			}
+////		};
+//
+////		updateTimer = new Timer(1, timerListener);
+////		updateTimer.start();
+//	}
 
 }

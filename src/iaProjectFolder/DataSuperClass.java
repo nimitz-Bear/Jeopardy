@@ -1,6 +1,8 @@
 package iaProjectFolder;
 
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -556,6 +558,40 @@ public class DataSuperClass extends JFrame {
 		ImageIcon imageIcon = new ImageIcon(dimg);
 		imgLabel.setIcon(imageIcon);
 	}
+	
+//	private void updateTimer(JTextArea answerDisplay, JTextArea questionDisplay) {
+//		// this listener updates the display for question and answer
+//		ActionListener timerListener = new ActionListener() {
+//			public void actionPerformed(ActionEvent evt) {
+//				int milliseconds;
+//				int seconds;
+//				
+//				++milliseconds;
+//				if (milliseconds == 1000) {
+//					seconds++;
+//					milliseconds = 0;
+//				}
+////				if (milliseconds % 50 == 0) {
+////					updateDatabase();
+////				}
+//
+//				if (milliseconds % 500 == 0) {
+//					lastSelectedRow = updateDisplay(answerDisplay, questionDisplay, imageLabel, table, lastSelectedRow,
+//							searchInput);
+////					tableDataValid();
+////					updateImageText();
+//				}
+//				
+//				if(seconds == 10) {
+//					tableDataValid();
+//					seconds = 0;
+//				}
+//			}
+//		};
+//
+//		updateTimer = new Timer(1, timerListener);
+//		updateTimer.start();
+//	}
 
 	public void search(LinkedList<Integer> searchResults, DefaultTableModel searchDTM, DefaultTableModel questionDTM,
 			JTable table, JTextField searchInput) {

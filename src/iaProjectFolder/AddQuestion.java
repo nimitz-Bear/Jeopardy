@@ -75,6 +75,7 @@ public class AddQuestion extends DataSuperClass {
 		contentPane.add(questionScrollPane);
 
 		questionInput = new JTextArea("");
+		questionInput.setLineWrap(true);
 		questionScrollPane.setViewportView(questionInput);
 
 		JScrollPane answerScrollPane = new JScrollPane();
@@ -82,6 +83,7 @@ public class AddQuestion extends DataSuperClass {
 		contentPane.add(answerScrollPane);
 
 		answerInput = new JTextArea("");
+		answerInput.setLineWrap(true);
 		answerScrollPane.setViewportView(answerInput);
 
 		categoryOptions = new JComboBox<String>();
@@ -129,7 +131,8 @@ public class AddQuestion extends DataSuperClass {
 					Object[] newRecord = new Object[5];
 					newRecord[0] = questionInput.getText();
 					newRecord[1] = answerInput.getText();
-					newRecord[2] = difficultyOptions.getSelectedItem();
+					// gets the index for the difficulty
+					newRecord[2] = difficultyOptions.getSelectedIndex();
 					newRecord[3] = fileName;
 					newRecord[4] = categoryOptions.getSelectedItem();
 					// TODO adding a primary key and table name
@@ -186,12 +189,12 @@ public class AddQuestion extends DataSuperClass {
 					} else {
 						JOptionPane.showMessageDialog(null, "Please input a valid value.");
 					}
-				}
-
-				// sets selected to the new category
-				for (int i = 0; i < categoryOptions.getItemCount(); i++) {
-					if (categoryOptions.getItemAt(i).contentEquals(newCategoryInput)) {
-						categoryOptions.setSelectedIndex(i);
+					
+					// sets selected to the new category
+					for (int i = 0; i < categoryOptions.getItemCount(); i++) {
+						if (categoryOptions.getItemAt(i).contentEquals(newCategoryInput)) {
+							categoryOptions.setSelectedIndex(i);
+						}
 					}
 				}
 

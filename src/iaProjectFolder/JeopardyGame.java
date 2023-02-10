@@ -63,6 +63,12 @@ public class JeopardyGame extends DataSuperClass {
 //		this.selectedCategories = selectedCategories;
 //		this.teamCount = teamCount;
 
+		// if the game isn't loading from a save file, then the game takes the number of
+		// teams from a passed parameter
+		if (saveFileName == null) {
+			this.teamCount = teamCount;
+		}
+
 		System.out.println("==================================================================");
 
 		for (int i = 0; i < selectedCategories.size(); i++) {
@@ -156,6 +162,7 @@ public class JeopardyGame extends DataSuperClass {
 //				System.out.println("row: " + tempRow + ", column: " + tempColumn);
 				if (questionInfo[column][row].contentEquals("") && answerInfo[column][row].contentEquals("")) {
 					jeapordyButtons[column][row].setEnabled(false);
+//					jeapordyButtons[column][row].setBackground(new Color(255, 200, 100));
 //					jeapordyButtons[column][row].setText("");	
 //					jeapordyButtons[column][row].setVisible(false); //can also make it invisible or no text
 				}
@@ -239,10 +246,10 @@ public class JeopardyGame extends DataSuperClass {
 		titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		titleLabel.setBounds(6, 6, 938, 57);
 		contentPane.add(titleLabel);
-		
+
 		JLabel descriptionLabel = new JLabel("Pick a question");
 		descriptionLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 22));
-		descriptionLabel.setEnabled(false);
+//		descriptionLabel.setEnabled(false);
 		descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		descriptionLabel.setForeground(Color.WHITE);
 		descriptionLabel.setBounds(145, 314, 653, 52);
@@ -525,8 +532,8 @@ public class JeopardyGame extends DataSuperClass {
 					milliseconds = 0;
 				}
 
-				// saves the game every 30 seconds
-				if (seconds == 30) {
+				// saves the game every 20 seconds
+				if (seconds == 20) {
 					seconds = 0;
 					saveGame("AutoSave");
 					System.out.println("Auto Saved.");
